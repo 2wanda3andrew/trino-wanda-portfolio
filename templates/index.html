@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="wrap hero">
+  <h1>Websites that work as hard as your business.</h1>
+  <p class="lede">I'm Andrew Mulaliki, founder of Trino Wanda Web Services. I design and build full-stack websites with Python, from a simple business page to a store with its own admin dashboard.</p>
+  <p><a class="btn" href="#work">See my work</a> <a class="btn ghost" href="#contact">Get in touch</a></p>
+  <ul class="facts"><li>Pay in 3 installments</li><li>You own the source code</li><li>Mobile Money accepted</li></ul>
+</section>
+
+<section class="wrap" id="work">
+  <h2>Selected work</h2>
+  {% for p in projects %}
+  <article class="project">
+    {% if p.image_list %}<div class="shots">
+      {% for img in p.image_list %}<figure><img src="{{ url_for('static', filename=img) }}" alt="{{ p.title }} screenshot {{ loop.index }}"></figure>{% endfor %}
+    </div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <p>{{ p.description }}</p>
+      {% if p.feature_list %}<ul>{% for f in p.feature_list %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
+      {% if p.tags %}<p class="tags">{{ p.tags }}</p>{% endif %}
+      {% if p.link %}<p><a class="btn" href="{{ p.link }}" target="_blank" rel="noopener">Visit the live site</a></p>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="wrap" id="about">
+  <h2>About</h2>
+  <p class="lede">I'm Andrew Mulaliki, a third-year computer science student and the founder of Trino Wanda, a tech and creative company. I build real websites for real businesses, writing the backend, the database and the pages myself, so you deal with one person from first message to launch.</p>
+  <p class="skills"><strong>Skills:</strong> Python, Flask, HTML, CSS, databases and full-stack web development.</p>
+</section>
+
+<section class="wrap" id="pricing">
+  <h2>Packages and pricing</h2>
+  <div class="grid3">
+  {% for p in packages %}
+    <article class="card {{ 'pop' if p.popular }}">
+      {% if p.popular %}<span class="badge">Most popular</span>{% endif %}
+      <h3>{{ p.name }}</h3>
+      <p class="price">{{ p.price|kwacha }}</p>
+      <p class="split">{{ p.split }}</p>
+      <ul>{% for f in p.features %}<li>{{ f }}</li>{% endfor %}</ul>
+      <a class="btn {{ '' if p.popular else 'ghost' }}" href="/?package={{ p.name }}#contact" data-pkg="{{ p.name }}">Choose {{ p.name }}</a>
+    </article>
+  {% endfor %}
+  </div>
+  <p class="note">Domain, hosting and major third-party services are charged separately. Major custom features are quoted separately.</p>
+</section>
+
+<section class="wrap" id="process">
+  <h2>How payment works</h2>
+  <ol class="steps">
+  {% for t, d in steps %}<li><h3>{{ t }}</h3><p>{{ d }}</p></li>{% endfor %}
+  </ol>
+  <ul class="terms">{% for t in terms %}<li>{{ t }}</li>{% endfor %}</ul>
+</section>
+
+<section class="wrap" id="contact">
+  <h2>Get a quote</h2>
+  {% for m in get_flashed_messages() %}<p class="err">{{ m }}</p>{% endfor %}
+  <form method="post" action="/quote" class="form">
+    <label>Your name<input name="name" required maxlength="80"></label>
+    <label>Package
+      <select name="package" id="pkg"><option value="">Not sure yet</option>{% for p in packages %}<option>{{ p.name }}</option>{% endfor %}</select>
+    </label>
+    <label>What do you need?<textarea name="details" rows="4" required maxlength="600"></textarea></label>
+    <button class="btn" type="submit">Send on WhatsApp</button>
+    <p class="note">This opens WhatsApp with your message ready to send. Or email <a href="mailto:{{ email }}">{{ email }}</a>.</p>
+  </form>
+</section>
+<script>var m=location.search.match(/package=([^&]+)/);if(m){document.getElementById('pkg').value=decodeURIComponent(m[1]).replace(/\+/g,' ')}</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dashboard | Trino Wanda</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+.adm{background:#111827;color:#fff;padding:.9rem 0}.adm .wrap{display:flex;justify-content:space-between;align-items:center}
+.adm form{margin:0}.adm .btn{background:none;border-color:#fff;padding:.4rem 1rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:.9rem;padding:1.5rem;margin-top:1.5rem;overflow-x:auto}
+.panel h2{font-size:1.4rem;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:.95rem}th,td{text-align:left;padding:.6rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+td form{display:inline;margin:0}.sm2{padding:.3rem .7rem;font-size:.9rem}.danger{color:#b42318;border-color:#b42318;background:none}
+.msg{background:var(--card);border:1px solid var(--accent);padding:.7rem 1rem;border-radius:.5rem;margin-top:1rem}
+.login{max-width:24rem;margin:6rem auto}.stats{display:flex;gap:2rem;flex-wrap:wrap;color:var(--muted)}
+.stats b{color:var(--ink);font-size:1.6rem;display:block}
+</style>
+</head>
+<body>
+{% if not logged_in %}
+<main class="wrap login">
+  <h1 style="font-size:2rem">Sign in</h1>
+  {% for m in get_flashed_messages() %}<p class="err">{{ m }}</p>{% endfor %}
+  <form method="post" class="form" style="margin-top:1rem">
+    <label>Password<input type="password" name="password" required autofocus></label>
+    <button class="btn" type="submit">Sign in</button>
+  </form>
+</main>
+{% else %}
+<header class="adm"><div class="wrap"><strong>Trino Wanda dashboard</strong>
+  <form method="post" action="{{ url_for('admin.logout') }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn" type="submit">Log out</button></form></div></header>
+<main class="wrap" style="padding-bottom:3rem">
+  {% for m in get_flashed_messages() %}<p class="msg">{{ m }}</p>{% endfor %}
+  <div class="panel stats">
+    <div><b>{{ leads|length }}</b>Quote requests</div>
+    <div><b>{{ leads|selectattr('status','equalto','New')|list|length }}</b>New</div>
+    <div><b>{{ leads|selectattr('status','equalto','Won')|list|length }}</b>Won</div>
+    <div><b>{{ projects|length }}</b>Projects</div>
+  </div>
+
+  <section class="panel" id="leads" style="padding-top:1.5rem">
+    <h2>Quote requests</h2>
+    {% if leads %}
+    <table>
+      <tr><th>Date</th><th>Name</th><th>Package</th><th>Request</th><th>Status</th><th></th></tr>
+      {% for l in leads %}
+      <tr>
+        <td>{{ l.created.strftime('%d %b %Y, %H:%M') }}</td><td>{{ l.name }}</td><td>{{ l.package or 'Not sure' }}</td><td>{{ l.details }}</td>
+        <td><form method="post" action="{{ url_for('admin.lead_status', lead_id=l.id) }}">
+          <input type="hidden" name="csrf" value="{{ csrf() }}">
+          <select name="status" onchange="this.form.submit()" aria-label="Status for {{ l.name }}">{% for s in statuses %}<option {{ 'selected' if s==l.status }}>{{ s }}</option>{% endfor %}</select></form></td>
+        <td><form method="post" action="{{ url_for('admin.lead_delete', lead_id=l.id) }}" onsubmit="return confirm('Delete this request?')">
+          <input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn sm2 danger" type="submit">Delete</button></form></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="note">No requests yet. When someone uses the quote form on your site, it shows up here.</p>{% endif %}
+  </section>
+
+  <section class="panel" id="projects">
+    <h2>Projects on your portfolio</h2>
+    <table>
+      {% for p in projects %}<tr><td><strong>{{ p.title }}</strong></td><td>{{ p.tags }}</td>
+        <td><form method="post" action="{{ url_for('admin.project_delete', project_id=p.id) }}" onsubmit="return confirm('Delete {{ p.title }}?')">
+          <input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn sm2 danger" type="submit">Delete</button></form></td></tr>
+      {% else %}<tr><td class="note">No projects yet.</td></tr>{% endfor %}
+    </table>
+    <h3 style="margin:1.5rem 0 .75rem">Add a project</h3>
+    <form method="post" action="{{ url_for('admin.project_add') }}" enctype="multipart/form-data" class="form">
+      <input type="hidden" name="csrf" value="{{ csrf() }}">
+      <label>Title<input name="title" required maxlength="100"></label>
+      <label>Description<textarea name="description" rows="3" required></textarea></label>
+      <label>Features (one per line)<textarea name="features" rows="4"></textarea></label>
+      <label>Tools used<input name="tags" placeholder="Python · Flask · HTML · CSS"></label>
+      <label>Live link (optional)<input name="link" placeholder="https://"></label>
+      <label>Screenshots (optional, you can pick several)<input type="file" name="images" accept="image/*" multiple></label>
+      <button class="btn" type="submit">Add project</button>
+    </form>
+  </section>
+</main>
+{% endif %}
+</body>
+</html>
